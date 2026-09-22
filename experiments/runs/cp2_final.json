@@ -1,0 +1,26 @@
+{
+  "name": "cp2_final",
+  "timestamp": "2026-09-19T00:31:11",
+  "metrics": {
+    "final_xgboost_test": {
+      "mae": 160.17586343324865,
+      "rmse": 300.60971002250267,
+      "mape": 10.343241555719773,
+      "r2": 0.8497666769401171,
+      "median_ae": 96.84677124023438
+    }
+  },
+  "params": {
+    "model_type": "xgboost",
+    "n_estimators": 1200,
+    "learning_rate": 0.03167908828507035,
+    "max_depth": 10,
+    "min_child_weight": 13,
+    "subsample": 0.6514610401327445,
+    "colsample_bytree": 0.7387868579267498,
+    "gamma": 0.0010673675957086994,
+    "reg_alpha": 0.0006277597308630747,
+    "reg_lambda": 0.19091612218839094
+  },
+  "notes": "Финальная модель: обучение на train+val, оценка на тесте (единственный раз)."
+}
