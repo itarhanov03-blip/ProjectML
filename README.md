@@ -37,11 +37,20 @@ make test          # тесты
 make lint          # линтер
 ```
 
-Через Docker, без установки Python на машину:
+Запуск сервиса:
+
+```bash
+make reference     # справочник городов для API (один раз)
+make api           # FastAPI на localhost:8000/docs
+make ui            # Streamlit на localhost:8501
+```
+
+Через Docker
 
 ```bash
 docker compose run --rm prepare-data   # подготовка данных
 docker compose run --rm experiments    # эксперименты
+docker compose up api ui               # сервис целиком
 ```
 
 Без `make`:
@@ -53,6 +62,43 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 ```
 
 Ноутбуки запускаются из папки `notebooks/` по порядку
+
+---
+
+## Запуск сервиса
+
+### 1. Подготовка (один раз)
+
+```bash
+make install       # окружение и зависимости
+make data          # скачать датасет с UCI
+make baseline      # подготовить data/processed/dataset.parquet
+make final         # обучить модель models/final_model.pkl
+make reference     # справочник городов models/city_reference.json
+```
+
+Модель и справочник в git не хранятся, поэтому после свежего клона эти шаги
+обязательны: без них API не стартует.
+
+### 2. Запуск
+
+Локально, в двух терминалах:
+
+```bash
+make api           # FastAPI: http://localhost:8000/docs
+```
+
+```bash
+make ui            # Streamlit: http://localhost:8501
+```
+
+Или в контейнерах одной командой:
+
+```bash
+docker compose up api ui
+```
+
+Остановить контейнеры: `docker compose down`
 
 ---
 
@@ -85,6 +131,7 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 │   │   ├── clean.py           дубли, типы, единицы измерения цены, пропуски, выбросы
 │   │   ├── features.py        удобства, питомцы, текст, гео, время, удаление утечек
 │   │   ├── encoders.py        target encoding города, TF-IDF + SVD по тексту
+│   │   ├── reference.py       справочник городов для инференса
 │   │   └── split.py           групповой train/val/test и проверка на утечки
 │   ├── models/
 │   │   ├── baseline.py        препроцессор, baseline-модели, полный прогон
@@ -101,10 +148,21 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 │   ├── experiments.md         таблица экспериментов
 │   └── runs/                  метрики прогонов в json
 │
-├── models/                    final_model.pkl (в git не попадает)
-├── reports/figures/           графики для отчёта
-├── app/                       API и интерфейс (CP3)
-└── tests/                     тесты подготовки данных и метрик
+├── app/
+│   ├── api/
+│   │   ├── main.py            FastAPI: /predict, /health, /model-info, /cities
+│   │   ├── schemas.py         валидация запросов и ответов
+│   │   └── predict.py         загрузка модели, сборка признаков из запроса
+│   └── ui/streamlit_app.py    форма оценки аренды
+│
+├── models/                    final_model.pkl, city_reference.json (не в git)
+├── reports/
+│   ├── report.md              отчёт
+│   ├── report.pdf             он же в PDF
+│   └── figures/               графики и скриншоты
+└── tests/
+    ├── test_data.py           очистка, признаки, сплит, метрики (19 тестов)
+    └── test_api.py            эндпоинты и валидация (17 тестов)
 ```
 
 **Baseline** (метрики на валидации)
