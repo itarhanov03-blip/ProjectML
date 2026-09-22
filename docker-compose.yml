@@ -1,0 +1,46 @@
+x-app-common: &app-common
+
+  image: rental-price-prediction:latest
+  volumes:
+    - ./data:/app/data
+    - ./models:/app/models
+    - ./reports:/app/reports
+    - ./experiments:/app/experiments
+
+services:
+  experiments:
+    <<: *app-common
+    build: .
+    container_name: rental-price-experiments
+    command: python -m src.models.experiments --stage all
+
+  prepare-data:
+    <<: *app-common
+    command: python -m src.models.baseline
+
+  lint:
+    image: rental-price-prediction:latest
+    command: sh -c "ruff check src/ && ruff format --check src/"
+
+  # Тесты: docker compose run --rm test
+  test:
+    image: rental-price-prediction:latest
+    command: python -m pytest tests/ -v
+
+  api:
+    <<: *app-common
+    container_name: rental-price-api
+    ports:
+      - "8000:8000"
+    command: uvicorn app.api.main:app --host 0.0.0.0 --port 8000
+
+  ui:
+    <<: *app-common
+    container_name: rental-price-ui
+    ports:
+      - "8501:8501"
+    environment:
+      - API_URL=http://api:8000
+    depends_on:
+      - api
+    command: streamlit run app/ui/streamlit_app.py --server.port 8501 --server.address 0.0.0.0

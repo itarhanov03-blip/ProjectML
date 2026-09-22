@@ -18,6 +18,9 @@ ignore = [
 
 [lint.per-file-ignores]
 "notebooks/*" = ["E402"]
+# pydantic вычисляет аннотации в рантайме, а синтаксис X | None работает
+# только с Python 3.10. У нас 3.9, поэтому в схемах нужен Optional.
+"app/api/schemas.py" = ["UP045", "UP007"]
 
 [format]
 quote-style = "double"
