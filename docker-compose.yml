@@ -1,0 +1,40 @@
+# Общие настройки для сервисов, которым нужны данные и результаты с хоста.
+# Вынесены в якорь, чтобы не дублировать три раза.
+x-app-common: &app-common
+  # Образ собирается один раз сервисом experiments (см. ниже) и
+  # переиспользуется остальными. Указывать build у нескольких сервисов с
+  # одинаковым тегом нельзя: сборщик bake экспортирует их параллельно
+  # и падает с "image already exists".
+  image: rental-price-prediction:latest
+  volumes:
+    - ./data:/app/data
+    - ./models:/app/models
+    - ./reports:/app/reports
+    - ./experiments:/app/experiments
+
+services:
+  # Основной сервис и единственное место, где собирается образ.
+  # Данные и результаты монтируются с хоста, чтобы не пересобирать образ
+  # ради новых данных и чтобы модели и графики оставались после остановки.
+  experiments:
+    <<: *app-common
+    build: .
+    container_name: rental-price-experiments
+    command: python -m src.models.experiments --stage all
+
+  # Разовая подготовка данных: скачивание с UCI, очистка, признаки, baseline.
+  # Запуск: docker compose run --rm prepare-data
+  prepare-data:
+    <<: *app-common
+    command: python -m src.models.baseline
+
+  # Проверка кода линтером: docker compose run --rm lint
+  # Тома не нужны — код лежит внутри образа.
+  lint:
+    image: rental-price-prediction:latest
+    command: sh -c "ruff check src/ && ruff format --check src/"
+
+  # Тесты: docker compose run --rm test
+  test:
+    image: rental-price-prediction:latest
+    command: python -m pytest tests/ -v

@@ -1,0 +1,13 @@
+.venv/
+data/
+models/
+notebooks/
+reports/
+.git/
+.github/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.ruff_cache/
+.pytest_cache/
+.DS_Store
